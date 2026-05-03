@@ -1,0 +1,14 @@
+#!/usr/bin/env node
+import { McpServer, StdioServerTransport } from '@modelcontextprotocol/server';
+import { registerBulkRead } from './tools/bulk-read.js';
+import { registerWriteDocs } from './tools/write-docs.js';
+import { registerWriteBoilerplate } from './tools/write-boilerplate.js';
+
+const server = new McpServer({ name: 'scribe', version: '0.1.0' });
+
+registerBulkRead(server);
+registerWriteDocs(server);
+registerWriteBoilerplate(server);
+
+const transport = new StdioServerTransport();
+await server.connect(transport);

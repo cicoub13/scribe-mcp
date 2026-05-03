@@ -1,0 +1,41 @@
+{
+  "name": "scribe-mcp",
+  "version": "0.1.0",
+  "description": "MCP server that delegates bulk file reading and doc/boilerplate writing to cheaper OpenAI-compatible models",
+  "type": "module",
+  "bin": {
+    "scribe-mcp": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/index.ts",
+    "prepublishOnly": "npm run build"
+  },
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "mcp",
+    "claude",
+    "ai",
+    "llm",
+    "token-savings"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@cfworker/json-schema": "^4.1.1",
+    "@modelcontextprotocol/server": "2.0.0-alpha.2",
+    "@openai/agents": "^0.8.5",
+    "glob": "^11.0.0",
+    "openai": "^6.26.0",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.8.0"
+  }
+}
