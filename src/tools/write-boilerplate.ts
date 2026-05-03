@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { resolve } from 'node:path';
-import type { McpServer } from '@modelcontextprotocol/server';
-import { callLLM } from '../llm.js';
+import type { McpServer, ServerContext } from '@modelcontextprotocol/server';
+import { callLLM, callLLMStream } from '../llm.js';
 import { expandGlobs, readSafe, writeWithMode } from '../utils/files.js';
 import { buildCorpus, SYSTEM_WRITE_BOILERPLATE } from '../utils/prompts.js';
 
@@ -24,7 +24,7 @@ export function registerWriteBoilerplate(server: McpServer): void {
         'Pass preview: true to inspect the result before writing.',
       inputSchema,
     },
-    async (args) => {
+    async (args, ctx: ServerContext) => {
       const { target_path, spec, reference_paths, preview, append } = args;
 
       let corpusSection = '';
@@ -41,7 +41,27 @@ export function registerWriteBoilerplate(server: McpServer): void {
       }
 
       const userMessage = `${corpusSection}Target file: ${resolve(target_path)}\n\nSpec: ${spec}`;
-      const { content, model } = await callLLM({ system: SYSTEM_WRITE_BOILERPLATE, user: userMessage });
+
+      const progressToken = ctx.mcpReq._meta?.progressToken;
+      let content: string;
+      let model: string;
+
+      if (progressToken !== undefined) {
+        let progress = 0;
+        ({ content, model } = await callLLMStream({
+          system: SYSTEM_WRITE_BOILERPLATE,
+          user: userMessage,
+          onChunk: async (chunk) => {
+            progress += chunk.length;
+            await ctx.mcpReq.notify({
+              method: 'notifications/progress',
+              params: { progressToken, progress, message: chunk },
+            });
+          },
+        }));
+      } else {
+        ({ content, model } = await callLLM({ system: SYSTEM_WRITE_BOILERPLATE, user: userMessage }));
+      }
 
       if (!preview) {
         await writeWithMode(target_path, content, append ?? false);

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { resolve } from 'node:path';
-import type { McpServer } from '@modelcontextprotocol/server';
-import { callLLM } from '../llm.js';
+import type { McpServer, ServerContext } from '@modelcontextprotocol/server';
+import { callLLM, callLLMStream } from '../llm.js';
 import { expandGlobs, readSafe, writeWithMode } from '../utils/files.js';
 import { buildCorpus, SYSTEM_WRITE_DOCS } from '../utils/prompts.js';
 
@@ -24,7 +24,7 @@ export function registerWriteDocs(server: McpServer): void {
         'Pass context_paths to give the LLM source files to document.',
       inputSchema,
     },
-    async (args) => {
+    async (args, ctx: ServerContext) => {
       const { target_path, instruction, context_paths, preview, append } = args;
 
       let corpusSection = '';
@@ -41,7 +41,27 @@ export function registerWriteDocs(server: McpServer): void {
       }
 
       const userMessage = `${corpusSection}Target file: ${resolve(target_path)}\n\nInstruction: ${instruction}`;
-      const { content, model } = await callLLM({ system: SYSTEM_WRITE_DOCS, user: userMessage });
+
+      const progressToken = ctx.mcpReq._meta?.progressToken;
+      let content: string;
+      let model: string;
+
+      if (progressToken !== undefined) {
+        let progress = 0;
+        ({ content, model } = await callLLMStream({
+          system: SYSTEM_WRITE_DOCS,
+          user: userMessage,
+          onChunk: async (chunk) => {
+            progress += chunk.length;
+            await ctx.mcpReq.notify({
+              method: 'notifications/progress',
+              params: { progressToken, progress, message: chunk },
+            });
+          },
+        }));
+      } else {
+        ({ content, model } = await callLLM({ system: SYSTEM_WRITE_DOCS, user: userMessage }));
+      }
 
       if (!preview) {
         await writeWithMode(target_path, content, append ?? false);

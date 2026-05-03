@@ -2,7 +2,7 @@
 
 An MCP server that delegates bulk file reading and doc/boilerplate writing from Claude to a cheaper, OpenAI-compatible model — saving 60–90 % of tokens on tasks that don't require frontier-level reasoning.
 
-Inspired by the [`deepseek-worker`](https://github.com) pattern: Claude sees `mcp__scribe__bulk_read` like any other MCP tool and routes heavy reading/writing tasks to a cheaper model automatically.
+Claude sees `mcp__scribe__bulk_read` like any other MCP tool and routes heavy reading/writing tasks to a cheaper model automatically.
 
 ---
 
@@ -59,6 +59,12 @@ All configuration is via environment variables (set in the `env` block above):
 | `SCRIBE_REASONING` | `false` | Enable reasoning/thinking mode (off by default) |
 | `SCRIBE_WORKSPACE_ROOT` | — optional | Restrict file access to this directory |
 | `SCRIBE_LOG_LEVEL` | `info` | `debug` \| `info` \| `warn` \| `error` |
+
+### Streaming
+
+Tools support streaming mode for real-time progress updates. When a client (like Claude Code) provides a `progressToken` in the request metadata, the server streams LLM output chunks back via MCP `notifications/progress` messages.
+
+This is automatic — no configuration needed. The server detects whether to stream based on the presence of a `progressToken` in the incoming request.
 
 ---
 
@@ -170,7 +176,7 @@ complex refactoring, or edits that require precise line numbers.
 ## Develop
 
 ```bash
-git clone https://github.com/your-org/scribe-mcp
+git clone https://github.com/cicoub13/scribe-mcp
 cd scribe-mcp
 npm install
 npm run build

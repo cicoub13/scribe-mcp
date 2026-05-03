@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import type { McpServer } from '@modelcontextprotocol/server';
-import { callLLM } from '../llm.js';
+import type { McpServer, ServerContext } from '@modelcontextprotocol/server';
+import { callLLM, callLLMStream } from '../llm.js';
 import { expandGlobs, readSafe } from '../utils/files.js';
 import { buildCorpus, SYSTEM_BULK_READ } from '../utils/prompts.js';
 
@@ -21,7 +21,7 @@ export function registerBulkRead(server: McpServer): void {
         'and the task is summarisation, search, or explanation.',
       inputSchema,
     },
-    async (args) => {
+    async (args, ctx: ServerContext) => {
       const { paths, question, max_files } = args;
 
       const resolvedPaths = await expandGlobs(paths, max_files ?? 50);
@@ -48,7 +48,26 @@ export function registerBulkRead(server: McpServer): void {
       const corpus = buildCorpus(fileContents);
       const userMessage = `<corpus>\n${corpus}\n</corpus>\n\n${question}`;
 
-      const { content, model } = await callLLM({ system: SYSTEM_BULK_READ, user: userMessage });
+      const progressToken = ctx.mcpReq._meta?.progressToken;
+      let content: string;
+      let model: string;
+
+      if (progressToken !== undefined) {
+        let progress = 0;
+        ({ content, model } = await callLLMStream({
+          system: SYSTEM_BULK_READ,
+          user: userMessage,
+          onChunk: async (chunk) => {
+            progress += chunk.length;
+            await ctx.mcpReq.notify({
+              method: 'notifications/progress',
+              params: { progressToken, progress, message: chunk },
+            });
+          },
+        }));
+      } else {
+        ({ content, model } = await callLLM({ system: SYSTEM_BULK_READ, user: userMessage }));
+      }
 
       const meta = [
         `\n\n---`,

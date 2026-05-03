@@ -3,6 +3,14 @@
   "version": "0.1.0",
   "description": "MCP server that delegates bulk file reading and doc/boilerplate writing to cheaper OpenAI-compatible models",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cicoub13/scribe-mcp.git"
+  },
+  "homepage": "https://github.com/cicoub13/scribe-mcp#readme",
+  "bugs": {
+    "url": "https://github.com/cicoub13/scribe-mcp/issues"
+  },
   "bin": {
     "scribe-mcp": "dist/index.js"
   },
