@@ -6,9 +6,51 @@ Claude sees `mcp__scribe__bulk_read` like any other MCP tool and routes heavy re
 
 ---
 
+## Table of Contents
+
+- [Install](#install)
+  - [Claude Code (CLI)](#claude-code-cli)
+  - [Claude Code (manual)](#claude-code-manual)
+  - [CLAUDE.md snippet](#claudemd-snippet)
+- [Configuration](#configuration)
+- [Switching providers](#switching-providers)
+- [Tools](#tools)
+  - [`mcp__scribe__bulk_read`](#mcp__scribe__bulk_read)
+  - [`mcp__scribe__write_docs`](#mcp__scribe__write_docs)
+  - [`mcp__scribe__write_boilerplate`](#mcp__scribe__write_boilerplate)
+- [Benchmark](#benchmark)
+- [Develop](#develop)
+- [License](#license)
+
+---
+
 ## Install
 
-### Claude Code
+### Claude Code (CLI)
+
+**Niveau projet** (enregistré dans `.mcp.json`, partagé avec l'équipe) :
+
+```bash
+claude mcp add -s project -e SCRIBE_API_KEY=your-api-key-here scribe -- npx -y scribe-mcp
+```
+
+**Niveau global** (enregistré dans `~/.claude.json`, disponible dans tous vos projets) :
+
+```bash
+claude mcp add -s user -e SCRIBE_API_KEY=your-api-key-here scribe -- npx -y scribe-mcp
+```
+
+To pass additional variables, repeat the `-e` flag:
+
+```bash
+claude mcp add -s user \
+  -e SCRIBE_API_KEY=your-api-key-here \
+  -e SCRIBE_BASE_URL=https://openrouter.ai/api/v1 \
+  -e SCRIBE_MODEL=deepseek/deepseek-chat-v3-0324 \
+  scribe -- npx -y scribe-mcp
+```
+
+### Claude Code (manual)
 
 Add to `~/.claude.json`:
 
@@ -26,22 +68,30 @@ Add to `~/.claude.json`:
 }
 ```
 
-### Claude Desktop
+### CLAUDE.md snippet
 
-Add to `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS):
+Add this to your project's `CLAUDE.md` (or your global `~/.claude/CLAUDE.md`) to prime Claude to delegate at the right moments:
 
-```jsonc
-{
-  "mcpServers": {
-    "scribe": {
-      "command": "npx",
-      "args": ["-y", "scribe-mcp"],
-      "env": {
-        "SCRIBE_API_KEY": "your-api-key-here"
-      }
-    }
-  }
-}
+```markdown
+## scribe-mcp — when to delegate
+
+Use the `scribe` MCP tools instead of reading/writing yourself when:
+
+- **`mcp__scribe__bulk_read`**: you are about to read ≥3 files OR a file >400 lines,
+  and the task is "summarise / explain / find X in these files".
+  Do NOT use if you need precise line numbers for editing.
+
+- **`mcp__scribe__write_docs`**: generating a README, docstrings, JSDoc,
+  or module-level comments. Writes directly to disk by default;
+  pass `preview: true` to inspect before writing yourself.
+
+- **`mcp__scribe__write_boilerplate`**: test stubs, type definitions, CRUD handlers,
+  fixtures, repetitive code from an existing pattern.
+  Pass 1–2 `reference_paths` so the style matches.
+  Writes directly to disk by default; pass `preview: true` to inspect first.
+
+NEVER delegate: architectural decisions, debugging, safety-critical code,
+complex refactoring, or edits that require precise line numbers.
 ```
 
 ---
@@ -59,14 +109,6 @@ All configuration is via environment variables (set in the `env` block above):
 | `SCRIBE_REASONING` | `false` | Enable reasoning/thinking mode (off by default) |
 | `SCRIBE_WORKSPACE_ROOT` | — optional | Restrict file access to this directory |
 | `SCRIBE_LOG_LEVEL` | `info` | `debug` \| `info` \| `warn` \| `error` |
-
-### Streaming
-
-Tools support streaming mode for real-time progress updates. When a client (like Claude Code) provides a `progressToken` in the request metadata, the server streams LLM output chunks back via MCP `notifications/progress` messages.
-
-This is automatic — no configuration needed. The server detects whether to stream based on the presence of a `progressToken` in the incoming request.
-
----
 
 ## Switching providers
 
@@ -145,31 +187,15 @@ Generates boilerplate code (tests, types, CRUD, fixtures) matching your project'
 
 ---
 
-## CLAUDE.md snippet
+## Benchmark
 
-Add this to your project's `CLAUDE.md` (or your global `~/.claude/CLAUDE.md`) to prime Claude to delegate at the right moments:
+Scribe MCP was benchmarked against Claude Code alone and [Serena](https://github.com/oraios/serena) on a real summarisation task. Key findings:
 
-```markdown
-## scribe-mcp — when to delegate
+- **−41 % output tokens** vs Claude Only
+- **−13 % total cost** vs Claude Only, with no setup required
+- Serena achieves the lowest cost overall, but requires a per-repository onboarding step
 
-Use the `scribe` MCP tools instead of reading/writing yourself when:
-
-- **`mcp__scribe__bulk_read`**: you are about to read ≥3 files OR a file >400 lines,
-  and the task is "summarise / explain / find X in these files".
-  Do NOT use if you need precise line numbers for editing.
-
-- **`mcp__scribe__write_docs`**: generating a README, docstrings, JSDoc,
-  or module-level comments. Writes directly to disk by default;
-  pass `preview: true` to inspect before writing yourself.
-
-- **`mcp__scribe__write_boilerplate`**: test stubs, type definitions, CRUD handlers,
-  fixtures, repetitive code from an existing pattern.
-  Pass 1–2 `reference_paths` so the style matches.
-  Writes directly to disk by default; pass `preview: true` to inspect first.
-
-NEVER delegate: architectural decisions, debugging, safety-critical code,
-complex refactoring, or edits that require precise line numbers.
-```
+→ See the [full benchmark results](./BENCHMARK.md) for token-by-token details.
 
 ---
 
