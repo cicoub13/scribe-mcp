@@ -11,7 +11,7 @@ Claude sees `mcp__scribe__bulk_read` like any other MCP tool and routes heavy re
 - [Install](#install)
   - [Claude Code (CLI)](#claude-code-cli)
   - [Claude Code (manual)](#claude-code-manual)
-  - [CLAUDE.md snippet](#claudemd-snippet)
+  - [Tool search and `alwaysLoad`](#tool-search-and-alwaysload)
 - [Configuration](#configuration)
 - [Switching providers](#switching-providers)
 - [Tools](#tools)
@@ -68,31 +68,28 @@ Add to `~/.claude.json`:
 }
 ```
 
-### CLAUDE.md snippet
+### Tool search and `alwaysLoad`
 
-Add this to your project's `CLAUDE.md` (or your global `~/.claude/CLAUDE.md`) to prime Claude to delegate at the right moments:
+By default, Claude Code defers MCP tool schemas (only loading them on demand via a search step). With many MCP servers active this saves context, but it also means Claude does not see scribe's tool descriptions at session start and may default to its built-in `Read` / `Explore` tools instead.
 
-```markdown
-## scribe-mcp — when to delegate
+To make scribe always visible in the tool catalog, set `alwaysLoad: true` on the server entry in `.mcp.json`:
 
-Use the `scribe` MCP tools instead of reading/writing yourself when:
-
-- **`mcp__scribe__bulk_read`**: you are about to read ≥3 files OR a file >400 lines,
-  and the task is "summarise / explain / find X in these files".
-  Do NOT use if you need precise line numbers for editing.
-
-- **`mcp__scribe__write_docs`**: generating a README, docstrings, JSDoc,
-  or module-level comments. Writes directly to disk by default;
-  pass `preview: true` to inspect before writing yourself.
-
-- **`mcp__scribe__write_boilerplate`**: test stubs, type definitions, CRUD handlers,
-  fixtures, repetitive code from an existing pattern.
-  Pass 1–2 `reference_paths` so the style matches.
-  Writes directly to disk by default; pass `preview: true` to inspect first.
-
-NEVER delegate: architectural decisions, debugging, safety-critical code,
-complex refactoring, or edits that require precise line numbers.
+```jsonc
+{
+  "mcpServers": {
+    "scribe": {
+      "command": "npx",
+      "args": ["-y", "scribe-mcp"],
+      "env": { "SCRIBE_API_KEY": "${SCRIBE_API_KEY}" },
+      "alwaysLoad": true
+    }
+  }
+}
 ```
+
+Requires Claude Code v2.1.121 or later. See the [Claude Code MCP docs](https://code.claude.com/docs/en/mcp#scale-with-mcp-tool-search) for the full mechanism.
+
+The server already ships with built-in usage instructions covering when to delegate and when not to (architectural decisions, debugging, safety-critical code, precise-line-number edits). A separate `CLAUDE.md` snippet is only needed if you want project-specific overrides.
 
 ---
 
