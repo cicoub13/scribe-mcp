@@ -31,23 +31,23 @@ Claude sees `mcp__scribe__bulk_read` like any other MCP tool and routes heavy re
 **Niveau projet** (enregistré dans `.mcp.json`, partagé avec l'équipe) :
 
 ```bash
-claude mcp add -s project -e SCRIBE_API_KEY=your-api-key-here scribe -- npx -y scribe-mcp
+claude mcp add scribe -s project -e SCRIBE_API_KEY=your-api-key-here -- npx -y scribe-mcp
 ```
 
 **Niveau global** (enregistré dans `~/.claude.json`, disponible dans tous vos projets) :
 
 ```bash
-claude mcp add -s user -e SCRIBE_API_KEY=your-api-key-here scribe -- npx -y scribe-mcp
+claude mcp add scribe -s user -e SCRIBE_API_KEY=your-api-key-here -- npx -y scribe-mcp
 ```
 
 To pass additional variables, repeat the `-e` flag:
 
 ```bash
-claude mcp add -s user \
+claude mcp add scribe -s user \
   -e SCRIBE_API_KEY=your-api-key-here \
   -e SCRIBE_BASE_URL=https://openrouter.ai/api/v1 \
   -e SCRIBE_MODEL=deepseek/deepseek-chat-v3-0324 \
-  scribe -- npx -y scribe-mcp
+  -- npx -y scribe-mcp
 ```
 
 ### Claude Code (manual)
