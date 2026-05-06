@@ -50,6 +50,8 @@ claude mcp add scribe -s user \
   -- npx -y scribe-mcp
 ```
 
+> **Recommended:** after running the command above, add `"alwaysLoad": true` to the generated server entry so Claude always sees Scribe's tools without a prior tool-search step. See [Tool search and `alwaysLoad`](#tool-search-and-alwaysload).
+
 ### Claude Code (manual)
 
 Add to `~/.claude.json`:
