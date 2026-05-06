@@ -24,8 +24,12 @@ npm run dev
 
 - Keep changes focused.
 - Update documentation when behavior changes.
-- Run `npm run build` before opening a pull request.
-- Add or update tests when the project gains a test harness.
+- Run `npm run lint && npm run build && npm test` before opening a pull request.
+- Add or update tests for any changed behaviour.
+
+## MCP SDK
+
+The project uses `@modelcontextprotocol/server@2.0.0-alpha.2`, which is a pre-release SDK. Even minor version bumps may introduce breaking changes. Review the SDK changelog carefully before upgrading.
 
 ## Release process
 
