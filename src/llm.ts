@@ -2,6 +2,27 @@ import OpenAI from 'openai';
 import { getConfig } from './config.js';
 import { logDebug, logWarn } from './utils/log.js';
 
+const RETRYABLE_STATUSES = new Set([429, 500, 502, 503, 504]);
+
+async function withRetry<T>(fn: () => Promise<T>, maxRetries = 2, baseDelayMs = 500): Promise<T> {
+  let attempt = 0;
+  while (true) {
+    try {
+      return await fn();
+    } catch (error) {
+      const httpStatus: unknown = error instanceof OpenAI.APIError ? error.status : undefined;
+      const isRetryable =
+        (typeof httpStatus === 'number' && RETRYABLE_STATUSES.has(httpStatus)) ||
+        error instanceof OpenAI.APIConnectionError;
+      if (!isRetryable || attempt >= maxRetries) throw error;
+      const delay = baseDelayMs * 2 ** attempt + Math.random() * 100;
+      logWarn(`transient API error, retrying in ${Math.round(delay)}ms`, { attempt: attempt + 1 });
+      await new Promise((resolve) => setTimeout(resolve, delay));
+      attempt++;
+    }
+  }
+}
+
 let _client: OpenAI | null = null;
 
 function getClient(): OpenAI {
@@ -37,7 +58,7 @@ async function createCompletionWithFallback(
   request: OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming,
 ): Promise<OpenAI.Chat.Completions.ChatCompletion> {
   try {
-    return await getClient().chat.completions.create(request);
+    return await withRetry(() => getClient().chat.completions.create(request));
   } catch (error) {
     if (!request.reasoning_effort) throw error;
 
@@ -47,7 +68,7 @@ async function createCompletionWithFallback(
 
     const fallbackRequest = { ...request };
     delete fallbackRequest.reasoning_effort;
-    return getClient().chat.completions.create(fallbackRequest);
+    return withRetry(() => getClient().chat.completions.create(fallbackRequest));
   }
 }
 
@@ -55,7 +76,7 @@ async function createStreamingCompletionWithFallback(
   request: OpenAI.Chat.Completions.ChatCompletionCreateParamsStreaming,
 ): Promise<AsyncIterable<OpenAI.Chat.Completions.ChatCompletionChunk>> {
   try {
-    return await getClient().chat.completions.create(request);
+    return await withRetry(() => getClient().chat.completions.create(request));
   } catch (error) {
     if (!request.reasoning_effort) throw error;
 
@@ -65,7 +86,7 @@ async function createStreamingCompletionWithFallback(
 
     const fallbackRequest = { ...request };
     delete fallbackRequest.reasoning_effort;
-    return getClient().chat.completions.create(fallbackRequest);
+    return withRetry(() => getClient().chat.completions.create(fallbackRequest));
   }
 }
 

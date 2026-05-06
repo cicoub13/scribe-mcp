@@ -1,7 +1,7 @@
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
-import { existsSync, statSync } from 'node:fs';
-import { resolve, dirname, isAbsolute } from 'node:path';
-import { glob } from 'glob';
+import { existsSync, statSync, realpathSync } from 'node:fs';
+import { resolve, dirname, isAbsolute, relative } from 'node:path';
+import { globIterate } from 'glob';
 import { getConfig } from '../config.js';
 
 const MAX_FILE_BYTES = 1_000_000; // 1 MB per file
@@ -20,12 +20,25 @@ function isBinaryPath(filePath: string): boolean {
   return BINARY_EXTENSIONS.has(ext);
 }
 
+function resolveReal(p: string): string {
+  try {
+    return realpathSync(p);
+  } catch {
+    // Path may not exist yet (e.g. a file about to be written). Resolve the
+    // nearest existing ancestor to still catch symlinks in the parent chain.
+    const parent = dirname(p);
+    if (parent === p) return p; // filesystem root
+    return resolve(resolveReal(parent), p.slice(parent.length + 1));
+  }
+}
+
 function assertInWorkspace(filePath: string): void {
   const config = getConfig();
   if (!config.workspaceRoot) return;
-  const abs = resolve(filePath);
-  const root = resolve(config.workspaceRoot);
-  if (!abs.startsWith(root + '/') && abs !== root) {
+  const abs = resolveReal(resolve(filePath));
+  const root = resolveReal(resolve(config.workspaceRoot));
+  const rel = relative(root, abs);
+  if (rel.startsWith('..') || isAbsolute(rel)) {
     throw new Error(`Path "${abs}" is outside workspace root "${root}"`);
   }
 }
@@ -55,17 +68,19 @@ export async function expandGlobs(
   maxFiles: number,
 ): Promise<string[]> {
   const results: string[] = [];
-  for (const pattern of patterns) {
+  outer: for (const pattern of patterns) {
     if (!pattern.includes('*') && !pattern.includes('{')) {
       const abs = isAbsolute(pattern) ? pattern : resolve(pattern);
       if (existsSync(abs)) results.push(abs);
+      if (results.length >= maxFiles) break;
       continue;
     }
-    const matches = await glob(pattern, { absolute: true, nodir: true });
-    results.push(...matches);
-    if (results.length >= maxFiles) break;
+    for await (const match of globIterate(pattern, { absolute: true, nodir: true })) {
+      results.push(match);
+      if (results.length >= maxFiles) break outer;
+    }
   }
-  return results.slice(0, maxFiles);
+  return results;
 }
 
 export async function writeWithMode(

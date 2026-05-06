@@ -17,6 +17,11 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsx src/index.ts",
+    "lint": "eslint src scripts tests",
+    "lint:fix": "eslint src scripts tests --fix",
+    "format": "prettier --write .",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "prepublishOnly": "npm run build"
   },
   "files": [
@@ -36,14 +41,20 @@
   "dependencies": {
     "@cfworker/json-schema": "^4.1.1",
     "@modelcontextprotocol/server": "2.0.0-alpha.2",
-    "@openai/agents": "^0.8.5",
     "glob": "^11.0.0",
     "openai": "^6.26.0",
     "zod": "^4.0.0"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/node": "^22.0.0",
+    "@vitest/coverage-v8": "^4.1.5",
+    "eslint": "^10.3.0",
+    "globals": "^17.6.0",
+    "prettier": "^3.8.3",
     "tsx": "^4.0.0",
-    "typescript": "^5.8.0"
+    "typescript": "^5.8.0",
+    "typescript-eslint": "^8.59.2",
+    "vitest": "^4.1.5"
   }
 }

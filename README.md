@@ -28,13 +28,13 @@ Claude sees `mcp__scribe__bulk_read` like any other MCP tool and routes heavy re
 
 ### Claude Code (CLI)
 
-**Niveau projet** (enregistré dans `.mcp.json`, partagé avec l'équipe) :
+**Project-level** (saved to `.mcp.json`, shared with the team):
 
 ```bash
 claude mcp add scribe -s project -e SCRIBE_API_KEY=your-api-key-here -- npx -y scribe-mcp
 ```
 
-**Niveau global** (enregistré dans `~/.claude.json`, disponible dans tous vos projets) :
+**User-level** (saved to `~/.claude.json`, available across all your projects):
 
 ```bash
 claude mcp add scribe -s user -e SCRIBE_API_KEY=your-api-key-here -- npx -y scribe-mcp
@@ -215,7 +215,20 @@ export SCRIBE_API_KEY=your-key
 node dist/index.js
 ```
 
-Test with [MCP Inspector](https://github.com/modelcontextprotocol/inspector):
+Available scripts:
+
+| Command | Description |
+|---|---|
+| `npm run build` | Compile TypeScript |
+| `npm run dev` | Run with `tsx` (no compile step) |
+| `npm run lint` | ESLint |
+| `npm run lint:fix` | ESLint with auto-fix |
+| `npm run format` | Prettier |
+| `npm test` | Vitest unit tests |
+| `npm run test:coverage` | Tests with coverage report |
+| `node scripts/smoke.mjs` | Smoke test (requires `npm run build` first) |
+
+Test interactively with [MCP Inspector](https://github.com/modelcontextprotocol/inspector):
 
 ```bash
 npx @modelcontextprotocol/inspector node dist/index.js
