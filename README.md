@@ -31,24 +31,26 @@ Claude sees `mcp__scribe__bulk_read` like any other MCP tool and routes heavy re
 **Niveau projet** (enregistré dans `.mcp.json`, partagé avec l'équipe) :
 
 ```bash
-claude mcp add -s project -e SCRIBE_API_KEY=your-api-key-here scribe -- npx -y scribe-mcp
+claude mcp add scribe -s project -e SCRIBE_API_KEY=your-api-key-here -- npx -y scribe-mcp
 ```
 
 **Niveau global** (enregistré dans `~/.claude.json`, disponible dans tous vos projets) :
 
 ```bash
-claude mcp add -s user -e SCRIBE_API_KEY=your-api-key-here scribe -- npx -y scribe-mcp
+claude mcp add scribe -s user -e SCRIBE_API_KEY=your-api-key-here -- npx -y scribe-mcp
 ```
 
 To pass additional variables, repeat the `-e` flag:
 
 ```bash
-claude mcp add -s user \
+claude mcp add scribe -s user \
   -e SCRIBE_API_KEY=your-api-key-here \
   -e SCRIBE_BASE_URL=https://openrouter.ai/api/v1 \
   -e SCRIBE_MODEL=deepseek/deepseek-chat-v3-0324 \
-  scribe -- npx -y scribe-mcp
+  -- npx -y scribe-mcp
 ```
+
+> **Recommended:** after running the command above, add `"alwaysLoad": true` to the generated server entry so Claude always sees Scribe's tools without a prior tool-search step. See [Tool search and `alwaysLoad`](#tool-search-and-alwaysload).
 
 ### Claude Code (manual)
 
@@ -160,6 +162,8 @@ Reads multiple files or glob patterns and returns a targeted summary or answer.
 
 Generates documentation (README, JSDoc, module comments, etc.) and writes it to disk.
 
+**When to use:** generating documentation that doesn't require frontier-level reasoning (READMEs, JSDoc, module comments).
+
 | Parameter | Type | Default | Description |
 |---|---|---|---|
 | `target_path` | `string` | required | Output file path |
@@ -173,6 +177,8 @@ Generates documentation (README, JSDoc, module comments, etc.) and writes it to 
 ### `mcp__scribe__write_boilerplate`
 
 Generates boilerplate code (tests, types, CRUD, fixtures) matching your project's style.
+
+**When to use:** repetitive code (tests, types, CRUD handlers, fixtures). Pass 1–2 `reference_paths` so output matches existing style.
 
 | Parameter | Type | Default | Description |
 |---|---|---|---|
