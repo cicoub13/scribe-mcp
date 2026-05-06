@@ -160,6 +160,8 @@ Reads multiple files or glob patterns and returns a targeted summary or answer.
 
 Generates documentation (README, JSDoc, module comments, etc.) and writes it to disk.
 
+**When to use:** generating documentation that doesn't require frontier-level reasoning (READMEs, JSDoc, module comments).
+
 | Parameter | Type | Default | Description |
 |---|---|---|---|
 | `target_path` | `string` | required | Output file path |
@@ -173,6 +175,8 @@ Generates documentation (README, JSDoc, module comments, etc.) and writes it to 
 ### `mcp__scribe__write_boilerplate`
 
 Generates boilerplate code (tests, types, CRUD, fixtures) matching your project's style.
+
+**When to use:** repetitive code (tests, types, CRUD handlers, fixtures). Pass 1–2 `reference_paths` so output matches existing style.
 
 | Parameter | Type | Default | Description |
 |---|---|---|---|
