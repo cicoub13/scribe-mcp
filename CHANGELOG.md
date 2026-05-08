@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog, and this project follows Semantic Versioning while it remains practical during early releases.
 
+## [0.3.0] - 2026-05-08
+
+### Added
+
+- Unit test suite covering `config`, `files`, `llm`, and `prompts` modules (vitest).
+- ESLint and Prettier configuration for consistent code style.
+- Smoke test script (`scripts/smoke.mjs`) for end-to-end validation.
+- `.nvmrc` to pin the Node.js version.
+
+### Changed
+
+- Optimized LLM request handling in `src/llm.ts`.
+- Refactored file utilities in `src/utils/files.ts` for better performance.
+- Updated CI workflow to run lint and tests on every push.
+
 ## [0.2.0] - 2026-05-06
 
 ### Added

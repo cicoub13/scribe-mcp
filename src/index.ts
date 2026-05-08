@@ -6,7 +6,7 @@ import { registerWriteBoilerplate } from './tools/write-boilerplate.js';
 import { SERVER_INSTRUCTIONS } from './instructions.js';
 
 const server = new McpServer(
-  { name: 'scribe', version: '0.2.0' },
+  { name: 'scribe', version: '0.3.0' },
   { instructions: SERVER_INSTRUCTIONS },
 );
 
